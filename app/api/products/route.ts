@@ -4,12 +4,22 @@ import { productService } from '@/lib/products';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
+  const MAX_LIMIT = 100;
+  const MAX_PARAM_LENGTH = 200;
+
+  const parsedLimit = parseInt(searchParams.get('limit') ?? '');
+  const parsedOffset = parseInt(searchParams.get('offset') ?? '');
+
+  const rawSearch = searchParams.get('search') || undefined;
+  const rawCategory = searchParams.get('category') || undefined;
+  const rawSubCategory = searchParams.get('subCategory') || undefined;
+
   const filters = {
-    category: searchParams.get('category') || undefined,
-    subCategory: searchParams.get('subCategory') || undefined,
-    search: searchParams.get('search') || undefined,
-    limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
-    offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0,
+    category: rawCategory?.slice(0, MAX_PARAM_LENGTH),
+    subCategory: rawSubCategory?.slice(0, MAX_PARAM_LENGTH),
+    search: rawSearch?.slice(0, MAX_PARAM_LENGTH),
+    limit: Math.min(Number.isNaN(parsedLimit) ? 20 : Math.max(0, parsedLimit), MAX_LIMIT),
+    offset: Number.isNaN(parsedOffset) ? 0 : Math.max(0, parsedOffset),
   };
 
   const products = productService.getAll(filters);
